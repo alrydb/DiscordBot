@@ -11,7 +11,7 @@ namespace DiscordBot
     {
         public WordGame()
         {
-            DailyWord = wordList[rand.Next(wordList.Length + 1)];
+            DailyWord = wordList[rand.Next(wordList.Length)];
         }
 
         static HttpClient client = new HttpClient();
