@@ -15,24 +15,31 @@ using DSharpPlus;
 namespace DiscordBot.Commands
 {
     [Group("wordGame")]
+    [Description("Ett spel som generear slumpässiga, svenska, ord som man sedan ska gissa sig fram till.")]
     public class WordGameCommands : BaseCommandModule
     {
         WordGame wordGame = new WordGame();
         Word word = null;
-        bool gameHasStarted = false;
+        Char[] dailyWordCharArray;
+
+
         private char? clueChar = null;
+        private char? startingChar = null;
         private int clueCharIndex;
-        bool showHiddenWord = false;
+
+       
+        bool gameHasStarted = false;
+        bool showHiddenChar = false;
         
 
 
 
         [Command("play")]
+        [Description("Startar ett nytt spel och genererar ett nytt ord.")]
         public async Task Play(CommandContext ctx)
 
         {
 
-            //wordGame.SetDailyWord();
             if(!gameHasStarted)
             {
                 await wordGame.InitalizeGame();
@@ -42,9 +49,7 @@ namespace DiscordBot.Commands
             }
             else
             {
-                wordGame.GenerateNewWord();
-                clueChar = null;
-                word = await WordGame.GetWordAsync(wordGame.DailyWord);
+                await ResetGame();
             }
           
 
@@ -52,14 +57,15 @@ namespace DiscordBot.Commands
                 string message = DisplayHiddenWord(ctx);
                
 
-                await ctx.Channel.SendMessageAsync("       " + '\n' + message).ConfigureAwait(false);
-                //await ctx.Channel.SendMessageAsync(emojis[1]).ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync("Nytt spel startat " + '\n' + "Ordets längd: " + wordGame.DailyWord.Length + '\n' +
+                    "Skriv '?help wordgame' för instruktioner och hjälp"  + '\n' + message).ConfigureAwait(false);
            
 
 
         }
 
         [Command("guess")]
+        [Description("Används för att gissa ordet. Tar en gissning som input, e.g '?wordgame guess *Katt*'.")]
         public async Task Guess(CommandContext ctx, string guess)
 
         { 
@@ -68,12 +74,14 @@ namespace DiscordBot.Commands
                 if (guess.Equals(wordGame.DailyWord))
                 {
                     
-                    await ctx.Channel.SendMessageAsync("Du gissade rätt!, wow, grattis!!!!" +  '\n' + DisplayWord(ctx)).ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync("Du gissade rätt! " + DiscordEmoji.FromName(ctx.Client, ":clap:") + DiscordEmoji.FromName(ctx.Client, ":partying_face:") + '\n' + DisplayWord(ctx)).ConfigureAwait(false);
+                    await ResetGame();
                 }
                 else
                 {
                     
-                    await ctx.Channel.SendMessageAsync("Du gissade fel, buuuuh!" + '\n' + DisplayHiddenWord(ctx)).ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync("Du gissade fel " + DiscordEmoji.FromName(ctx.Client, ":rofl:" ) + DiscordEmoji.FromName(ctx.Client, ":rofl:") + DiscordEmoji.FromName(ctx.Client, ":rofl:") +
+                        '\n' + DisplayHiddenWord(ctx)).ConfigureAwait(false);
                 }
             }
             else
@@ -87,33 +95,36 @@ namespace DiscordBot.Commands
         }
 
         [Command("clue1")]
+        [Description("Avslöjar en slumpmässig bokstav i ordet.")]
         public async Task Clue1(CommandContext ctx)
 
         {
-            if (gameHasStarted)
+            if (gameHasStarted && !showHiddenChar)
             {
                 try
                 {
-                    Random random = new Random();
 
+                    Random random = new Random();
                     Char[] dailyWordCharArray = wordGame.DailyWord.ToCharArray();
                     clueCharIndex = random.Next(dailyWordCharArray.Length);
+                        if (clueCharIndex == 0)
+                            { clueCharIndex = 1; }
                     clueChar = dailyWordCharArray[clueCharIndex];
 
-                    switch (clueChar)
-                    {
-                        case 'å':
-                            clueChar = 'a';
-                            break;
-                        case 'ä':
-                            clueChar = 'a';
-                            break;
-                        case 'ö':
-                            clueChar = 'o';
-                            break;
-                    }
+                    //switch (clueChar)
+                    //{
+                    //    case 'å':
+                    //        clueChar = 'a';
+                    //        break;
+                    //    case 'ä':
+                    //        clueChar = 'a';
+                    //        break;
+                    //    case 'ö':
+                    //        clueChar = 'o';
+                    //        break;
+                    //}
 
-                    showHiddenWord = true;
+                    showHiddenChar = true;
 
                     await ctx.Channel.SendMessageAsync("Ledtråd 1, ordet innehåller bokstaven: " + clueChar + '\n' + DisplayHiddenWord(ctx)).ConfigureAwait(false);
                 }
@@ -123,16 +134,19 @@ namespace DiscordBot.Commands
                 }
                
             }
-            else
+            else if(!gameHasStarted)
             {
                 await ctx.Channel.SendMessageAsync("Du måste starta ett spel för att få en ledtråd. Se ?help wordgame").ConfigureAwait(false);
             }
+            
+
 
 
 
         }
 
         [Command("clue2")]
+        [Description("Visar, om tillgängligt, en definition av ordet.")]
         public async Task Clue2(CommandContext ctx)
 
         {
@@ -149,6 +163,7 @@ namespace DiscordBot.Commands
         }
 
         [Command("clue3")]
+        [Description("Visar, om tillgängligt, en synonym till ordet.")]
         public async Task Clue3(CommandContext ctx)
 
         {
@@ -171,7 +186,12 @@ namespace DiscordBot.Commands
             List<DiscordEmoji> emojis = new List<DiscordEmoji>();
 
 
-            for (int i = 0; i < wordGame.DailyWord.Length; i++)
+
+            startingChar = wordGame.DailyWord.ToCharArray()[0];
+            //emojis.RemoveAt(0);
+            emojis.Insert(0, DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + startingChar + ":"));
+
+            for (int i = 0; i < wordGame.DailyWord.Length -1; i++)
             {
                
                 
@@ -179,12 +199,14 @@ namespace DiscordBot.Commands
                 
             }
 
-            if (showHiddenWord)
+            if (showHiddenChar)
             {
                
                 emojis.RemoveAt(clueCharIndex);
                 emojis.Insert(clueCharIndex, DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + clueChar + ":"));
             }
+
+           
 
 
             foreach (DiscordEmoji emoji in emojis)
@@ -250,10 +272,24 @@ namespace DiscordBot.Commands
 
         }
 
+       
+        
+        private async Task ResetGame()
+        {
+            word = null;
+            wordGame.GenerateNewWord();
+            showHiddenChar = false;
+            clueChar = null;
+            startingChar = null;
+            word = await WordGame.GetWordAsync(wordGame.DailyWord);
+        }   
 
 
 
 
     }
+
+    
+
 
 }

@@ -14,13 +14,6 @@ namespace DiscordBot.Commands
     public class FunCommands : BaseCommandModule
     {
       
-            [Command("ping")]
-        [Description("Returns pong")]
-        public async Task Ping(CommandContext ctx)
-        {
-            // Lägg alltid till ConfigureAwait(false) på alla await anrop
-            await ctx.Channel.SendMessageAsync("Pong").ConfigureAwait(false);
-        }
 
         [Command("Sweine")]
         public async Task Add(CommandContext ctx)
