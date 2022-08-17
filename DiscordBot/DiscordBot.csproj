@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <None Include="bin\Debug\net6.0\config.json" />
+    <None Include="bin\Debug\net6.0\wordlist.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,7 +20,9 @@ namespace DiscordBot.Commands
         WordGame wordGame = new WordGame();
         Word word = null;
         bool gameHasStarted = false;
-        
+        private char? clueChar = null;
+        private int clueCharIndex;
+        bool showHiddenWord = false;
         
 
 
@@ -29,19 +31,28 @@ namespace DiscordBot.Commands
         public async Task Play(CommandContext ctx)
 
         {
-            
+
             //wordGame.SetDailyWord();
+            if(!gameHasStarted)
+            {
+                await wordGame.InitalizeGame();
+                word = await WordGame.GetWordAsync(wordGame.DailyWord);
 
-
-            word = await WordGame.GetWordAsync(wordGame.DailyWord);
-
-            gameHasStarted = true;
+                gameHasStarted = true;
+            }
+            else
+            {
+                wordGame.GenerateNewWord();
+                clueChar = null;
+                word = await WordGame.GetWordAsync(wordGame.DailyWord);
+            }
+          
 
 
                 string message = DisplayHiddenWord(ctx);
                
 
-                await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync("       " + '\n' + message).ConfigureAwait(false);
                 //await ctx.Channel.SendMessageAsync(emojis[1]).ConfigureAwait(false);
            
 
@@ -57,7 +68,7 @@ namespace DiscordBot.Commands
                 if (guess.Equals(wordGame.DailyWord))
                 {
                     
-                    await ctx.Channel.SendMessageAsync("Du gissade rätt!, wow, grattis!!!!" +  '\n' + DisplayHiddenWord(ctx)).ConfigureAwait(false);
+                    await ctx.Channel.SendMessageAsync("Du gissade rätt!, wow, grattis!!!!" +  '\n' + DisplayWord(ctx)).ConfigureAwait(false);
                 }
                 else
                 {
@@ -81,12 +92,36 @@ namespace DiscordBot.Commands
         {
             if (gameHasStarted)
             {
-                Random random = new Random();
+                try
+                {
+                    Random random = new Random();
 
-                Char[] dailyWordCharArray = wordGame.DailyWord.ToCharArray();
-                var randomChar = dailyWordCharArray[random.Next(dailyWordCharArray.Length + 1)];
-                
-                await ctx.Channel.SendMessageAsync("Ledtråd 1, ordet innehåller bokstaven: " + DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + randomChar + ":")).ConfigureAwait(false);
+                    Char[] dailyWordCharArray = wordGame.DailyWord.ToCharArray();
+                    clueCharIndex = random.Next(dailyWordCharArray.Length);
+                    clueChar = dailyWordCharArray[clueCharIndex];
+
+                    switch (clueChar)
+                    {
+                        case 'å':
+                            clueChar = 'a';
+                            break;
+                        case 'ä':
+                            clueChar = 'a';
+                            break;
+                        case 'ö':
+                            clueChar = 'o';
+                            break;
+                    }
+
+                    showHiddenWord = true;
+
+                    await ctx.Channel.SendMessageAsync("Ledtråd 1, ordet innehåller bokstaven: " + clueChar + '\n' + DisplayHiddenWord(ctx)).ConfigureAwait(false);
+                }
+                catch(Exception e)
+                {
+                    await ctx.Channel.SendMessageAsync(e.Message + clueCharIndex).ConfigureAwait(false);
+                }
+               
             }
             else
             {
@@ -138,17 +173,81 @@ namespace DiscordBot.Commands
 
             for (int i = 0; i < wordGame.DailyWord.Length; i++)
             {
+               
+                
                 emojis.Add((DiscordEmoji.FromName(ctx.Client, ":blue_square:")));
+                
+            }
+
+            if (showHiddenWord)
+            {
+               
+                emojis.RemoveAt(clueCharIndex);
+                emojis.Insert(clueCharIndex, DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + clueChar + ":"));
             }
 
 
             foreach (DiscordEmoji emoji in emojis)
             {
+                //if(showHiddenWord)
+                //{
+                //    message += emoji + " ";
+                //    emojis.RemoveAt(clueCharIndex);
+                //    emojis.Insert(clueCharIndex, DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + clueChar + ":"));
+
+                //}
+                //else
+                //{
+               
                 message += emoji + " ";
+                //}
+                
 
             }
 
             return message;
+        }
+
+        private string DisplayWord(CommandContext ctx)
+        {
+            string message = string.Empty;
+            List<DiscordEmoji> emojis = new List<DiscordEmoji>();
+            char[] word = wordGame.DailyWord.ToCharArray();
+
+            for(int i = 0; i < word.Length; i++)
+            {
+                switch (word[i])
+                {
+                    case 'å':
+                        word[i] = 'a';
+                        break;
+                    case 'ä':
+                        word[i] = 'a';
+                        break;
+                    case 'ö':
+                        word[i] = 'o';
+                        break;
+                }
+                    
+
+
+                emojis.Add(DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + word[i] + ":"));
+            }
+
+
+            foreach (DiscordEmoji emoji in emojis)
+            {
+                
+
+                message += emoji + " ";
+                
+
+
+            }
+
+            return message;
+
+
         }
 
 

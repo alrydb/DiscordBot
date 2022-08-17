@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DiscordBot.Models;
+using Newtonsoft.Json;
 
 namespace DiscordBot
 {
@@ -11,13 +12,20 @@ namespace DiscordBot
     {
         public WordGame()
         {
-            DailyWord = wordList[rand.Next(wordList.Length)];
+           //LoadWords();
+            //DailyWord = wordList[rand.Next(wordList.Length)];
+            //InitalizeGame();
+            
         }
 
         static HttpClient client = new HttpClient();
 
-        private string[] wordList = { "hund", "anka", "kossa" };
-        Random rand = new Random();
+
+
+
+
+        private List<string> wordList = new List<string>();
+       
         public string DailyWord { get; private set; } 
 
 
@@ -45,7 +53,40 @@ namespace DiscordBot
 
         public void SetDailyWord()
         {
-            DailyWord = wordList[rand.Next(wordList.Length + 1 )];
+            //DailyWord = wordList[rand.Next(wordList.Length + 1 )];
         }
+
+
+
+        private async Task LoadWords()
+        {
+            var json = string.Empty;
+
+            using (var fs = File.OpenRead("wordlist.json"))
+            using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
+                
+            json = await sr.ReadToEndAsync().ConfigureAwait(false);
+
+            WordList words = JsonConvert.DeserializeObject<WordList>(json);
+
+           for(int i = 0; i < words.Words.Length; i++)
+            {
+                wordList.Add(words.Words[i]);
+            }
+        }
+
+        public async Task InitalizeGame()
+        {
+            await LoadWords();
+            GenerateNewWord();
+        }
+
+        public void GenerateNewWord()
+        {
+            Random rand = new Random();
+            DailyWord = wordList[rand.Next(wordList.Count)];
+        }
+
+
     }
 }
