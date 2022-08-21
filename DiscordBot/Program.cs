@@ -1,5 +1,6 @@
 ﻿using System;
 
+
 namespace DiscordBot
 {
     internal class Program
@@ -8,6 +9,7 @@ namespace DiscordBot
         {
             Bot bot = new Bot();
             bot.RunAsync().GetAwaiter().GetResult();
+            
            
 
         }

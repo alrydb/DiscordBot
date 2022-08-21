@@ -9,6 +9,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Net;
 using DSharpPlus.Exceptions;
+using DSharpPlus.VoiceNext;
 
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ namespace DiscordBot
         public CommandsNextExtension Commands { get; private set; }
 
 
+        
 
        
 
@@ -54,17 +56,25 @@ namespace DiscordBot
 
             Client = new DiscordClient(config);
 
+            Client.UseVoiceNext();
+
             Client.Ready += OnClientReady;
+
+     
+            
 
             CommandsNextConfiguration commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableDms = false,
                 EnableMentionPrefix = true
+
                 
             };
 
             Commands = Client.UseCommandsNext(commandsConfig);
+
+            //NextExtension = Client.GetVoiceNext();
 
             Commands.RegisterCommands<FunCommands>();
 
@@ -72,7 +82,10 @@ namespace DiscordBot
 
             await Client.ConnectAsync();
 
+            
+
             await Task.Delay(-1);
+
 
         }
 

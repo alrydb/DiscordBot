@@ -31,7 +31,6 @@ namespace DiscordBot
 
        public static async Task<Word> GetWordAsync(string dailyWord)
         {
-            //SetUpClient();
 
             Word word = null;
             HttpResponseMessage response = await client.GetAsync("https://synonymord.se/api/?q=" + dailyWord);
@@ -51,10 +50,6 @@ namespace DiscordBot
         }
 
 
-        public void SetDailyWord()
-        {
-            //DailyWord = wordList[rand.Next(wordList.Length + 1 )];
-        }
 
 
 
