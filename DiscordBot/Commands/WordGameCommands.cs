@@ -143,7 +143,7 @@ namespace DiscordBot.Commands
             }
             else if (!gameHasStarted)
             {
-                await ctx.Channel.SendMessageAsync("Du måste starta ett spel för att få en ledtråd. Se ?help wordgame").ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync("Du måste starta ett spel för att få en ledtråd. Se -help wordgame").ConfigureAwait(false);
             }
 
 
@@ -214,7 +214,7 @@ namespace DiscordBot.Commands
 
             emojis.Insert(0, DiscordEmoji.FromName(ctx.Client, ":regional_indicator_" + startingChar + ":"));
 
-            for (int i = 0; i < wordGame.DailyWord.Length - 1; i++)
+            for (int i = 0; i < wordGame.DailyWord.Length -1; i++)
             {
 
                 
@@ -224,20 +224,33 @@ namespace DiscordBot.Commands
 
             if (showHiddenChar)
             {
-                for(int i = 0; i < wordGame.DailyWord.Length; i++)
+                //for(int i = 0; i < wordGame.DailyWord.Length; i++)
+                //{
+                //    switch (wordGame.DailyWord[i])
+                //    {
+                //        case 'å':
+                //            clueChar = 'a';
+                //            break;
+                //        case 'ä':
+                //            clueChar = 'a';
+                //            break;
+                //        case 'ö':
+                //            clueChar = 'o';
+                //            break;
+                //    }
+                //}
+
+                foreach(char c in wordGame.DailyWord)
                 {
-                    switch (wordGame.DailyWord[i])
+                    if (clueChar.Equals('å') || clueChar.Equals('ä'))
                     {
-                        case 'å':
-                            clueChar = 'a';
-                            break;
-                        case 'ä':
-                            clueChar = 'a';
-                            break;
-                        case 'ö':
-                            clueChar = 'o';
-                            break;
+                        clueChar = 'a';
                     }
+                    else if (clueChar.Equals('ö'))
+                    {
+                        clueChar = 'o';
+                    }
+                   
                 }
                 
 
